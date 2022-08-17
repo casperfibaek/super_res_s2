@@ -1,17 +1,17 @@
 [build-system]
-requires = ["flit_core>=3.2", "tensorflow>=2.9", "opencv-python>=4.6", "numba>=0.56"]
+requires = ["flit_core>=3.7", "tensorflow>=2.9", "opencv-python>=4.6", "numba>=0.56"]
 build-backend = "flit_core.buildapi"
 
 [project]
 name = "superres_casperfibaek"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
   { name="Casper Fibaek", email="casperfibaek@gmail.com" },
 ]
 description = "SuperResolution of Sentinel2 imagery."
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = ">=3.9"
+requires-python = ">=3.7"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -19,5 +19,5 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/pypa/sampleproject"
-"Bug Tracker" = "https://github.com/pypa/sampleproject/issues"
+"Homepage" = "https://github.com/casperfibaek/super_res_s2"
+"Bug Tracker" = "https://github.com/casperfibaek/super_res_s2/issues"
