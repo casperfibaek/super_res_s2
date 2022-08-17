@@ -11,7 +11,7 @@ def resample_array(arr, target_shape, interpolation=cv2.INTER_AREA):
     return resized
 
 
-def super_sample_sentinel2(
+def super_sample(
     data,
     fit_data=True,
     indices={
@@ -116,7 +116,3 @@ def super_sample_sentinel2(
             super_sampled[:, :, indices[band]] = pred[:, :, 0]
 
     return np.rint(super_sampled * 10000.0).astype("uint16")
-
-
-s2_file = "/home/casper/Desktop/data/S2B_MSIL2A_20220804T101559_N0400_R065_T32TNR_20220804T130854.SAFE"
-bob = super_sample_sentinel2(s2_file)
