@@ -30,6 +30,22 @@ def super_sample(
     verbose=True,
     normalise=True,
 ):
+    """
+    Super-sample a Sentinel 2 image. The source can either be a NumPy array of the bands, or a .safe file.
+
+    ## Args:
+    `data` (_str_/_np.ndarray_): The image to supersample </br>
+
+    ## Kwargs:
+    `indices` (_dict_): If the input is not a safe file, a dictionary with the band names and the indices in the NumPy array must be proved. It comes in the form of { "B02": 0, "B03": 1, ... } (Default: **10m first, then 20m**) </br>
+    `method` (_str_): Either fast or accurate. If fast, uses less overlaps and weighted average merging. If accurate, uses more overlaps and the mad_merge algorithm (Default: **fast**) </br>
+    `fit_data` (_bool_): Should the deep learning model be fitted with the data? Improves accuracy, but takes around 1m to fit on colab. (Default: **True**) </br>
+    `verbose` (_bool_): If True, print statements will update on the progress (Default: **True**) </br>
+    `normalise` (_bool_): If the input data should be normalised. Leave this True, unless it has already been done. The model expects sentinel 2 l2a data normalised by dividing by 10000.0 (Default: **True**) </br>
+
+    ## Returns:
+    (_np.ndarray_): A NumPy array with the supersampled data.
+    """
     if isinstance(data, str):
         assert data.endswith(".SAFE")
 
