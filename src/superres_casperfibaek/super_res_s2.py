@@ -2,7 +2,7 @@ import os
 import numpy as np
 import tensorflow as tf
 import cv2
-from utils import get_overlaps, predict, get_band_paths
+from superres_casperfibaek.utils import get_overlaps, predict, get_band_paths
 
 
 def resample_array(arr, target_shape, interpolation=cv2.INTER_AREA):
