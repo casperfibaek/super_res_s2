@@ -14,18 +14,8 @@ def resample_array(arr, target_shape, interpolation=cv2.INTER_AREA):
 def super_sample(
     data,
     fit_data=True,
-    indices={
-        "B02": 0,
-        "B03": 1,
-        "B04": 2,
-        "B05": 4,
-        "B06": 5,
-        "B07": 6,
-        "B08": 3,
-        "B8A": 7,
-        "B11": 8,
-        "B12": 9,
-    },
+    fit_epochs=5,
+    indices={ "B02": 0, "B03": 1, "B04": 2, "B05": 4, "B06": 5, "B07": 6, "B08": 3, "B8A": 7, "B11": 8, "B12": 9 },
     method="fast",
     verbose=True,
     normalise=True,
@@ -40,6 +30,7 @@ def super_sample(
     `indices` (_dict_): If the input is not a safe file, a dictionary with the band names and the indices in the NumPy array must be proved. It comes in the form of { "B02": 0, "B03": 1, ... } (Default: **10m first, then 20m**) </br>
     `method` (_str_): Either fast or accurate. If fast, uses less overlaps and weighted average merging. If accurate, uses more overlaps and the mad_merge algorithm (Default: **fast**) </br>
     `fit_data` (_bool_): Should the deep learning model be fitted with the data? Improves accuracy, but takes around 1m to fit on colab. (Default: **True**) </br>
+    `fit_epochs` (_int_): If the model is refitted, for how many epochs should it run? (Default: **5**) </br>
     `verbose` (_bool_): If True, print statements will update on the progress (Default: **True**) </br>
     `normalise` (_bool_): If the input data should be normalised. Leave this True, unless it has already been done. The model expects sentinel 2 l2a data normalised by dividing by 10000.0 (Default: **True**) </br>
 
@@ -109,9 +100,11 @@ def super_sample(
             x=x_train,
             y=y_train,
             shuffle=True,
-            epochs=5,
+            epochs=fit_epochs,
             verbose=1,
             batch_size=32,
+            use_multiprocessing=True,
+            workers=0,
         )
     
     super_sampled = np.copy(data)

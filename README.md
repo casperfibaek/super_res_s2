@@ -1,6 +1,6 @@
 # Super-resolution for Sentinel 2 files.
 
-This repository provides a function to Super-sample the 20m bands of the Sentinel 2 imagery to 10m.
+### *Provides a function to Super-sample the 20m bands of the Sentinel 2 imagery to 10m.*
 
 It works by using an inception res-net style Deep Learning model trained on 200 sites randomly selected around the globe. With at least 50% of locations containing urban areas. For each location, twelve training images were collected spread out across different seasons.
 
@@ -36,6 +36,7 @@ Super-sample a Sentinel 2 image. The source can either be a NumPy array of the b
 `indices` (_dict_): If the input is not a .safe file, a dictionary with the band names and the indices in the NumPy array must be proved. It comes in the form of { "B02": 0, "B03": 1, ... } (Default: **10m first, then 20m**) </br>
 `method` (_str_): Either fast or accurate. If fast, uses less overlaps and weighted average merging. If accurate, uses more overlaps and the mad_merge algorithm (Default: **"fast"**) </br>
 `fit_data` (_bool_): Should the deep learning model be fitted with the data? Improves accuracy, but takes around 1m to fit on colab. (Default: **True**) </br>
+`fit_epochs` (_int_): If the model is refitted, for how many epochs should it run? (Default: **5**) </br>
 `verbose` (_bool_): If True, print statements will update on the progress (Default: **True**) </br>
 `normalise` (_bool_): If the input data should be normalised. Leave this True, unless it has already been done. The model expects sentinel 2 l2a data normalised by dividing by 10000.0 (Default: **True**) </br>
 
