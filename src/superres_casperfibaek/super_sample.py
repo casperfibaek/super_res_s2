@@ -77,7 +77,7 @@ def super_sample(
     
     if verbose: print("Loading model...")
 
-    if preloaded_model is not None:
+    if preloaded_model is None:
         super_res_dir = os.path.dirname(os.path.realpath(__file__))
         model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v3"))
     else:
