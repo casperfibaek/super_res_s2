@@ -11,6 +11,13 @@ def resample_array(arr, target_shape, interpolation=cv2.INTER_AREA):
     return resized
 
 
+def get_model():
+    super_res_dir = os.path.dirname(os.path.realpath(__file__))
+    model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v3"))
+
+    return model
+
+
 def super_sample(
     data,
     fit_data=True,
@@ -19,6 +26,7 @@ def super_sample(
     method="fast",
     verbose=True,
     normalise=True,
+    preloaded_model=None,
 ):
     """
     Super-sample a Sentinel 2 image. The source can either be a NumPy array of the bands, or a .safe file.
@@ -68,8 +76,11 @@ def super_sample(
     
     if verbose: print("Loading model...")
 
-    super_res_dir = os.path.dirname(os.path.realpath(__file__))
-    model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v3"))
+    if preloaded_model is not None:
+        super_res_dir = os.path.dirname(os.path.realpath(__file__))
+        model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v3"))
+    else:
+        model = preloaded_model
 
     if normalise:
         data = (data / 10000.0).astype("float32")
