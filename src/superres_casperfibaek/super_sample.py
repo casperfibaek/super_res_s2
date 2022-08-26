@@ -75,9 +75,9 @@ def super_sample(
         if band not in indices:
             assert "Bands 2, 3, and 4 are required to supersample other bands." 
     
-    if verbose: print("Loading model...")
 
     if preloaded_model is None:
+        if verbose: print("Loading model...")
         super_res_dir = os.path.dirname(os.path.realpath(__file__))
         model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v3"))
     else:
