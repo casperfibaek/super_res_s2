@@ -41,6 +41,7 @@ def super_sample(
     `fit_epochs` (_int_): If the model is refitted, for how many epochs should it run? (Default: **5**) </br>
     `verbose` (_bool_): If True, print statements will update on the progress (Default: **True**) </br>
     `normalise` (_bool_): If the input data should be normalised. Leave this True, unless it has already been done. The model expects sentinel 2 l2a data normalised by dividing by 10000.0 (Default: **True**) </br>
+    `preloaded_model` (_None/tf.model_): Allows preloading the model, useful if applying the super_sampling within a loop. (Default: **None**) </br>
 
     ## Returns:
     (_np.ndarray_): A NumPy array with the supersampled data.
