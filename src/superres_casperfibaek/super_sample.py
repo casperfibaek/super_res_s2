@@ -69,7 +69,7 @@ def super_sample(
     if verbose: print("Loading model...")
 
     super_res_dir = os.path.dirname(os.path.realpath(__file__))
-    model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v2.h5"))
+    model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v3"))
 
     if normalise:
         data = (data / 10000.0).astype("float32")
