@@ -9,8 +9,8 @@ The model itself is trained by using the RGB bands to sharpen the NIR band. *Fir
 
 ```python
 # Setup
-!pip install -i https://test.pypi.org/simple/ superres-casperfibaek==0.0.4
-from superres_casperfibaek.super_res_s2 import super_sample
+!pip install s2super
+from s2super import super_sample
 
 # Constants
 YEAR = 2021
@@ -50,4 +50,4 @@ Fibaek, C.S, Super-sample Sentinel 2, (2022), GitHub repository, https://github.
 Developed at the European Space Agency's Φ-lab.
 
 # Build
-python -m build; python -m twine upload --repository testpypi dist/*
+python -m build; python -m twine upload dist/*

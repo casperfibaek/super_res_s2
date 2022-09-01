@@ -2,7 +2,8 @@ import os
 import numpy as np
 import tensorflow as tf
 import cv2
-from superres_casperfibaek.utils import get_overlaps, predict, get_band_paths
+from s2super.utils import predict, get_band_paths
+from buteo import get_patches
 
 
 def resample_array(arr, target_shape, interpolation=cv2.INTER_AREA):
@@ -99,9 +100,9 @@ def super_sample(
         nir_lr = resample_array(y_train, (y_train.shape[0] // 2, y_train.shape[1] // 2), interpolation=cv2.INTER_AREA)[:, :, np.newaxis]
         nir = resample_array(nir_lr, (y_train.shape[0], y_train.shape[1]), interpolation=cv2.INTER_LINEAR)[:, :, np.newaxis]
 
-        nir_patches, _, _ = get_overlaps(nir, tile_size=64, number_of_offsets=0, border_check=False)
-        rgb_patches, _, _ = get_overlaps(rgb, tile_size=64, number_of_offsets=0, border_check=False)
-        y_train, _, _ = get_overlaps(y_train, tile_size=64, number_of_offsets=0, border_check=False)
+        nir_patches, _, _ = get_patches(nir, tile_size=64, number_of_offsets=0, border_check=False)
+        rgb_patches, _, _ = get_patches(rgb, tile_size=64, number_of_offsets=0, border_check=False)
+        y_train, _, _ = get_patches(y_train, tile_size=64, number_of_offsets=0, border_check=False)
         x_train = [nir_patches, rgb_patches]
 
         lr = 0.00001
