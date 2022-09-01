@@ -3,7 +3,7 @@ requires = ["flit_core>=3.7", "tensorflow>=2.8", "opencv-python>=4.6", "numba>=0
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "superres_casperfibaek"
+name = "s2super"
 version = "0.0.8"
 authors = [
   { name="Casper Fibaek", email="casperfibaek@gmail.com" },
