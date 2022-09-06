@@ -1,1 +1,1 @@
-from super_sample import super_sample
+from .super_sample import super_sample, get_model

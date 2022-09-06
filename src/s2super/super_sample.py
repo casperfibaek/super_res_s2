@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 import cv2
 from s2super.utils import predict, get_band_paths
-from buteo import get_patches
+from buteo.raster.patches import get_patches
 
 
 def resample_array(arr, target_shape, interpolation=cv2.INTER_AREA):
