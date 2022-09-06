@@ -2,7 +2,7 @@ import os
 import numpy as np
 import tensorflow as tf
 from glob import glob
-from buteo import get_patches, get_kernel_weights, patches_to_array, weighted_median, mad_merge
+from buteo.raster.patches import get_patches, get_kernel_weights, patches_to_array, weighted_median, mad_merge
 
 
 def predict(
