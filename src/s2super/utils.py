@@ -15,6 +15,7 @@ def predict(
     batch_size=None,
     edge_distance=5,
     merge_method="mean",
+    verbose=0,
 ):
     if isinstance(model, str):
         model = tf.keras.models.load_model(model) if isinstance(model, str) else model
@@ -52,7 +53,7 @@ def predict(
         for overlap in overlaps:
             test.append(overlap[idx])
 
-        predicted = model.predict(test, batch_size=batch_size)
+        predicted = model.predict(test, batch_size=batch_size, verbose=verbose)
         pred_reshaped = patches_to_array(predicted, og_shape, tile_size)
        
         pred_weights = np.tile(weight_tile, (predicted.shape[0], 1, 1))[:, :, :, np.newaxis]

@@ -114,7 +114,7 @@ def super_sample(
             y=y_train,
             shuffle=True,
             epochs=fit_epochs,
-            verbose=1,
+            verbose=verbose,
             batch_size=32,
             use_multiprocessing=True,
             workers=0,
@@ -126,14 +126,14 @@ def super_sample(
         if band in ["B02", "B03", "B04", "B08"]:
             super_sampled[:, :, indices[band]] = data[:, :, indices[band]]
         else:
-            print("Super-sampling band:", band)
+            if verbose: print("Super-sampling band:", band)
             rgb = super_sampled[:, :, [indices["B02"], indices["B03"], indices["B04"]]]
             tar = super_sampled[:, :, indices[band]][:, :, np.newaxis]
 
             if method == "fast":
-                pred = predict(model, [tar, rgb], tar, number_of_offsets=3, merge_method="mean")
+                pred = predict(model, [tar, rgb], tar, number_of_offsets=3, merge_method="mean", verbose=verbose)
             else:
-                pred = predict(model, [tar, rgb], tar, number_of_offsets=9, merge_method="mad")
+                pred = predict(model, [tar, rgb], tar, number_of_offsets=9, merge_method="mad", verbose=verbose)
 
             super_sampled[:, :, indices[band]] = pred[:, :, 0]
 
