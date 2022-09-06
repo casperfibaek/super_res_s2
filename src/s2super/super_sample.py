@@ -14,7 +14,7 @@ def resample_array(arr, target_shape, interpolation=cv2.INTER_AREA):
 
 def get_model():
     super_res_dir = os.path.dirname(os.path.realpath(__file__))
-    model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v3"))
+    model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v4"))
 
     return model
 
@@ -80,7 +80,7 @@ def super_sample(
     if preloaded_model is None:
         if verbose: print("Loading model...")
         super_res_dir = os.path.dirname(os.path.realpath(__file__))
-        model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v3"))
+        model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v4"))
     else:
         model = preloaded_model
 
