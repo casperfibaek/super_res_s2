@@ -1,11 +1,13 @@
 # Super-resolution for Sentinel 2 files.
 
-### *Provides a function to Super-sample the 20m bands of the Sentinel 2 imagery to 10m.*
+### *Provides a function to "Super-Sample" the 20m bands of the Sentinel 2 imagery to match the 10m bands.*
 
 It works by using an inception res-net style Deep Learning model trained on 1000 sites randomly selected around the globe.
-The sites represent at least 25 samples within each Köppen-Geiger climate zones, all cities in the with at least 1 million inhabitatants. For each location, three training mosaics were collected spread out across different seasons resulting in 3000 mosaics.
+The sites represent at least 25 samples within each Köppen-Geiger climate zone and at least one image for each city in the world with at least 1 million inhabitants. For each location, three training mosaics were collected spread out across different seasons resulting in a total of 3000 mosaics.
 
-The model itself is trained by using the RGB bands to sharpen the NIR band. *First* the resampled NIR band is transposed to the mean values of the RGB bands, *secondly* the network supersamples the NIR band, and *thirdly* the network mean-matches the low resolution image to the generated high-resolution image. To super-sample the other bands, they are substituted with the NIR band. The model has been purposely made small to ensure easy deployment.
+The model itself is trained by using the RGB bands to sharpen the downsampled NIR band. *First* the resampled NIR band is transposed to the mean values of the RGB bands, *secondly* the network supersamples the transposed NIR band, and *thirdly* the network mean-matches the low resolution image to the generated high-resolution image. To super-sample the other bands, they are substituted with the NIR band. The model has been purposely made small to ensure easy deployment and the methodology is quite conservative in its estimates to ensure no wild predictions.
+
+The goal of package is to create a drop in replacement for arrays sharpened with the bilinear method and _should_ provide a minor improvement in downstream model accuracy.
 
 **Dependencies** </br>
 `buteo`(https://casperfibaek.github.io/buteo/) </br>
@@ -33,13 +35,8 @@ super_sampled = super_sample(data, method="fast", fit_data=False)
 ```
 
 ![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/blob/main/Macapa.png)
-<p align="center">Macapá</p>
-
 ![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/blob/main/Okavango.png)
-<p align="center">Okavango</p>
-
 ![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/blob/main/Copenhagen.png)
-<p align="center">Copenhagen</p>
 
 # super_sample
 Super-sample a Sentinel 2 image. The source can either be a NumPy array of the bands, or a .safe file.
