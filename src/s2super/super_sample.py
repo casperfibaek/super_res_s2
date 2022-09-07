@@ -1,15 +1,10 @@
 import os
 import numpy as np
 import tensorflow as tf
-import cv2
 from s2super.utils import predict, get_band_paths
+from buteo.raster.core_raster import raster_to_array
 from buteo.raster.patches import get_patches
-
-
-def resample_array(arr, target_shape, interpolation=cv2.INTER_AREA):
-    resized = cv2.resize(arr, (target_shape[1], target_shape[0]), interpolation=interpolation)
-
-    return resized
+from buteo.raster.resample import resample_array
 
 
 def get_model():
@@ -56,15 +51,18 @@ def super_sample(
         for key in paths["10m"]:
             if verbose: print(f"Loading 10m band: {key}")
             if key in ["B02", "B03", "B04", "B08"]:
-                img_10m = cv2.imread(paths["10m"][key], cv2.IMREAD_UNCHANGED)[:, :, np.newaxis]
+                # img_10m = cv2.imread(paths["10m"][key], cv2.IMREAD_UNCHANGED)[:, :, np.newaxis]
+                img_10m = raster_to_array(paths["10m"][key])
                 b10m.append(img_10m)
 
         for key in paths["20m"]:
             if key in ["B05", "B06", "B07", "B8A", "B11", "B12"]:
                 if verbose: print(f"Loading 20m band: {key}")
-                img_20m = cv2.imread(paths["20m"][key], cv2.IMREAD_UNCHANGED)
+                # img_20m = cv2.imread(paths["20m"][key], cv2.IMREAD_UNCHANGED)
+                img_20m = raster_to_array(paths["20m"][key])
                 if verbose: print(f"Resampling 20m band: {key}")
-                img_20m = resample_array(img_20m, (b10m[0].shape[0], b10m[0].shape[1]), interpolation=cv2.INTER_LINEAR)[:, :, np.newaxis]
+                img_20m = resample_array(img_20m, (b10m[0].shape[0], b10m[0].shape[1]), resample_alg="bilinear")
+                # img_20m = resample_array(img_20m, (b10m[0].shape[0], b10m[0].shape[1]), interpolation=cv2.INTER_LINEAR)[:, :, np.newaxis]
 
                 b10m.append(img_20m)
         
@@ -97,8 +95,10 @@ def super_sample(
         y_train = data[:, :, indices["B08"]][:, :, np.newaxis]
 
         if verbose: print("Resampling target data.")
-        nir_lr = resample_array(y_train, (y_train.shape[0] // 2, y_train.shape[1] // 2), interpolation=cv2.INTER_AREA)[:, :, np.newaxis]
-        nir = resample_array(nir_lr, (y_train.shape[0], y_train.shape[1]), interpolation=cv2.INTER_LINEAR)[:, :, np.newaxis]
+        nir_lr = resample_array(y_train, (y_train.shape[0] // 2, y_train.shape[1] // 2), resample_alg="average")
+        nir = resample_array(nir_lr, (y_train.shape[0], y_train.shape[1]), resample_alg="bilinear")
+        # nir_lr = resample_array(y_train, (y_train.shape[0] // 2, y_train.shape[1] // 2), interpolation=cv2.INTER_AREA)[:, :, np.newaxis]
+        # nir = resample_array(nir_lr, (y_train.shape[0], y_train.shape[1]), interpolation=cv2.INTER_LINEAR)[:, :, np.newaxis]
 
         nir_patches, _, _ = get_patches(nir, tile_size=64, number_of_offsets=0, border_check=False)
         rgb_patches, _, _ = get_patches(rgb, tile_size=64, number_of_offsets=0, border_check=False)
