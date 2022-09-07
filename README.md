@@ -34,8 +34,10 @@ super_sampled = super_sample(data, method="fast", fit_data=False)
 
 ![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/blob/main/Macapa.png)
 <p align="center">Macapá</p>
+
 ![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/blob/main/Okavango.png)
 <p align="center">Okavango</p>
+
 ![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/blob/main/Copenhagen.png)
 <p align="center">Copenhagen</p>
 
