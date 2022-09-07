@@ -19,7 +19,6 @@ The package aims to be a drop-in replacement for arrays sharpened with the bilin
 **Quickstart**
 ```python
 # Setup
-pip install s2super
 from s2super import super_sample
 
 # Constants
