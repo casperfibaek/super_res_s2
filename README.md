@@ -5,9 +5,9 @@
 It works by using an inception res-net style Deep Learning model trained on 1000 sites randomly selected around the globe.
 The sites represent at least 25 samples within each Köppen-Geiger climate zone and at least one image for each city in the world with at least 1 million inhabitants. For each location, three training mosaics were collected spread out across different seasons resulting in a total of 3000 mosaics.
 
-The model itself is trained by using the RGB bands to sharpen the downsampled NIR band. *First* the resampled NIR band is transposed to the mean values of the RGB bands, *secondly* the network supersamples the transposed NIR band, and *thirdly* the network mean-matches the low resolution image to the generated high-resolution image. To super-sample the other bands, they are substituted with the NIR band. The model has been purposely made small to ensure easy deployment and the methodology is quite conservative in its estimates to ensure no wild predictions.
+The model itself is trained by using the RGB bands to sharpen the downsampled NIR band. *First* the resampled NIR band is transposed to the mean values of the RGB bands, *secondly* the network super-samples the transposed NIR band, and *thirdly* the network mean-matches the low-resolution image to the generated high-resolution image. To super-sample the other bands, they are substituted with the NIR band. The model has been purposely made small to ensure easy deployment, and the methodology is quite conservative in its estimates to ensure that no wild predictions are made.
 
-The goal of package is to create a drop in replacement for arrays sharpened with the bilinear method and _should_ provide a minor improvement in downstream model accuracy.
+The package aims to be a drop-in replacement for arrays sharpened with the bilinear method and _should_ provide a minor improvement in downstream model accuracy.
 
 **Dependencies** </br>
 `buteo`(https://casperfibaek.github.io/buteo/) </br>
