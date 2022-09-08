@@ -33,9 +33,9 @@ data = get_data_from_latlng(AOI, year=YEAR, months=MONTHS)[0]
 super_sampled = super_sample(data, method="fast", fit_data=False)
 ```
 
-![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/blob/main/Macapa.png)
-![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/blob/main/Okavango.png)
-![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/blob/main/Copenhagen.png)
+![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/raw/main/Macapa.png)
+![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/raw/main/Okavango.png)
+![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/raw/main/Copenhagen.png)
 
 # super_sample
 Super-sample a Sentinel 2 image. The source can either be a NumPy array of the bands, or a .safe file.
