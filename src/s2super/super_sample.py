@@ -163,9 +163,12 @@ def super_sample(
         if verbose:
             print("Resampling: NIR")
 
-        nir_RAW = super_sampled[:, :, indices["B08"]][:, :, np.newaxis]
-        nir_lr = resample_array(nir_RAW, (nir_RAW.shape[0] // 2, nir_RAW.shape[1] // 2), resample_alg="average")
-        nir = resample_array(nir_lr, (nir_RAW.shape[0], nir_RAW.shape[1]), resample_alg="bilinear")
+        if _pred_nir is None:
+            nir_RAW = super_sampled[:, :, indices["B08"]][:, :, np.newaxis]
+            nir_lr = resample_array(nir_RAW, (nir_RAW.shape[0] // 2, nir_RAW.shape[1] // 2), resample_alg="average")
+            nir = resample_array(nir_lr, (nir_RAW.shape[0], nir_RAW.shape[1]), resample_alg="bilinear")
+        else:
+            nir = _pred_nir
 
         if verbose:
             print("Super-sampling band: NIR")
