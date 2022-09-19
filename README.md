@@ -62,3 +62,7 @@ Developed at the European Space Agency's Φ-lab.
 
 # Build
 python -m build; python -m twine upload dist/*
+
+# Cuda-setup
+conda install -c nvidia cuda-python
+conda install -c conda-forge cudnn
