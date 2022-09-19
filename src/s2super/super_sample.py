@@ -184,7 +184,7 @@ def super_sample(
             method=method,
             verbose=verbose,
             normalise=False,
-            preloaded_model=preloaded_model,
+            preloaded_model=model,
             batch_size_fit=batch_size_fit,
             batch_size_pred=batch_size_pred,
             _current_step=_current_step,
