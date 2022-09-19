@@ -123,7 +123,9 @@ def super_sample(
         lr = learning_rate_fit
         model.optimizer.lr.assign(lr)
 
-        if verbose: print("Fitting model...")
+        if verbose:
+            print("Fitting model...")
+
         model.fit(
             x=x_train,
             y=y_train,
@@ -141,7 +143,9 @@ def super_sample(
         if band in ["B02", "B03", "B04", "B08"]:
             super_sampled[:, :, indices[band]] = data[:, :, indices[band]]
         else:
-            if verbose: print("Super-sampling band:", band)
+            if verbose:
+                print("Super-sampling band:", band)
+
             rgb = super_sampled[:, :, [indices["B02"], indices["B03"], indices["B04"]]]
             tar = super_sampled[:, :, indices[band]][:, :, np.newaxis]
 
@@ -156,11 +160,20 @@ def super_sample(
 
     if _current_step < iterations:
 
-        pred_tar = super_sampled[:, :, indices["B08"]][:, :, np.newaxis]
+        if verbose:
+            print("Resampling: NIR")
+
+        nir_RAW = super_sampled[:, :, indices["B08"]][:, :, np.newaxis]
+        nir_lr = resample_array(nir_RAW, (nir_RAW.shape[0] // 2, nir_RAW.shape[1] // 2), resample_alg="average")
+        nir = resample_array(nir_lr, (nir_RAW.shape[0], nir_RAW.shape[1]), resample_alg="bilinear")
+
+        if verbose:
+            print("Super-sampling band: NIR")
+
         if method == "fast":
-            pred_nir = predict(model, [pred_tar, rgb], pred_tar, number_of_offsets=3, merge_method="mean", batch_size=batch_size_pred, verbose=verbose)
+            pred_nir = predict(model, [nir, rgb], nir, number_of_offsets=3, merge_method="mean", batch_size=batch_size_pred, verbose=verbose)
         else:
-            pred_nir = predict(model, [pred_tar, rgb], pred_tar, number_of_offsets=9, merge_method="mad", batch_size=batch_size_pred, verbose=verbose)
+            pred_nir = predict(model, [nir, rgb], nir, number_of_offsets=9, merge_method="mad", batch_size=batch_size_pred, verbose=verbose)
 
         super_sampled = super_sample(
             super_sampled,
@@ -170,7 +183,7 @@ def super_sample(
             indices=indices,
             method=method,
             verbose=verbose,
-            normalise=True,
+            normalise=False,
             preloaded_model=preloaded_model,
             batch_size_fit=batch_size_fit,
             batch_size_pred=batch_size_pred,
