@@ -18,11 +18,17 @@ def super_sample(
     data,
     fit_data=True,
     fit_epochs=5,
+    iterations=1,
     indices={ "B02": 0, "B03": 1, "B04": 2, "B05": 4, "B06": 5, "B07": 6, "B08": 3, "B8A": 7, "B11": 8, "B12": 9 },
     method="fast",
     verbose=True,
     normalise=True,
     preloaded_model=None,
+    batch_size_fit=32,
+    learning_rate_fit=0.00001,
+    batch_size_pred=None,
+    _current_step=0,
+    _pred_nir=None,
 ):
     """
     Super-sample a Sentinel 2 image. The source can either be a NumPy array of the bands, or a .safe file.
@@ -51,18 +57,21 @@ def super_sample(
         for key in paths["10m"]:
             if verbose: print(f"Loading 10m band: {key}")
             if key in ["B02", "B03", "B04", "B08"]:
-                # img_10m = cv2.imread(paths["10m"][key], cv2.IMREAD_UNCHANGED)[:, :, np.newaxis]
                 img_10m = raster_to_array(paths["10m"][key])
                 b10m.append(img_10m)
 
         for key in paths["20m"]:
             if key in ["B05", "B06", "B07", "B8A", "B11", "B12"]:
-                if verbose: print(f"Loading 20m band: {key}")
-                # img_20m = cv2.imread(paths["20m"][key], cv2.IMREAD_UNCHANGED)
+
+                if verbose:
+                    print(f"Loading 20m band: {key}")
+
                 img_20m = raster_to_array(paths["20m"][key])
-                if verbose: print(f"Resampling 20m band: {key}")
+
+                if verbose:
+                    print(f"Resampling 20m band: {key}")
+
                 img_20m = resample_array(img_20m, (b10m[0].shape[0], b10m[0].shape[1]), resample_alg="bilinear")
-                # img_20m = resample_array(img_20m, (b10m[0].shape[0], b10m[0].shape[1]), interpolation=cv2.INTER_LINEAR)[:, :, np.newaxis]
 
                 b10m.append(img_20m)
         
@@ -94,18 +103,21 @@ def super_sample(
         rgb = data[:, :, [indices["B02"], indices["B03"], indices["B04"]]]
         y_train = data[:, :, indices["B08"]][:, :, np.newaxis]
 
-        if verbose: print("Resampling target data.")
-        nir_lr = resample_array(y_train, (y_train.shape[0] // 2, y_train.shape[1] // 2), resample_alg="average")
-        nir = resample_array(nir_lr, (y_train.shape[0], y_train.shape[1]), resample_alg="bilinear")
-        # nir_lr = resample_array(y_train, (y_train.shape[0] // 2, y_train.shape[1] // 2), interpolation=cv2.INTER_AREA)[:, :, np.newaxis]
-        # nir = resample_array(nir_lr, (y_train.shape[0], y_train.shape[1]), interpolation=cv2.INTER_LINEAR)[:, :, np.newaxis]
+        if verbose:
+            print("Resampling target data.")
+
+        if _pred_nir is None:
+            nir_lr = resample_array(y_train, (y_train.shape[0] // 2, y_train.shape[1] // 2), resample_alg="average")
+            nir = resample_array(nir_lr, (y_train.shape[0], y_train.shape[1]), resample_alg="bilinear")
+        else:
+            nir = _pred_nir
 
         nir_patches, _, _ = get_patches(nir, tile_size=64, number_of_offsets=0, border_check=False)
         rgb_patches, _, _ = get_patches(rgb, tile_size=64, number_of_offsets=0, border_check=False)
         y_train, _, _ = get_patches(y_train, tile_size=64, number_of_offsets=0, border_check=False)
         x_train = [nir_patches, rgb_patches]
 
-        lr = 0.00001
+        lr = learning_rate_fit
         model.optimizer.lr.assign(lr)
 
         if verbose: print("Fitting model...")
@@ -115,7 +127,7 @@ def super_sample(
             shuffle=True,
             epochs=fit_epochs,
             verbose=verbose,
-            batch_size=32,
+            batch_size=batch_size_fit,
             use_multiprocessing=True,
             workers=0,
         )
@@ -131,10 +143,36 @@ def super_sample(
             tar = super_sampled[:, :, indices[band]][:, :, np.newaxis]
 
             if method == "fast":
-                pred = predict(model, [tar, rgb], tar, number_of_offsets=3, merge_method="mean", verbose=verbose)
+                pred = predict(model, [tar, rgb], tar, number_of_offsets=3, merge_method="mean", batch_size=batch_size_pred, verbose=verbose)
             else:
-                pred = predict(model, [tar, rgb], tar, number_of_offsets=9, merge_method="mad", verbose=verbose)
+                pred = predict(model, [tar, rgb], tar, number_of_offsets=9, merge_method="mad", batch_size=batch_size_pred, verbose=verbose)
 
             super_sampled[:, :, indices[band]] = pred[:, :, 0]
+
+    _current_step += 1
+
+    if iterations > _current_step:
+
+        pred_tar = super_sampled[:, :, indices["B08"]][:, :, np.newaxis]
+        if method == "fast":
+            pred_nir = predict(model, [pred_tar, rgb], pred_tar, number_of_offsets=3, merge_method="mean", batch_size=batch_size_pred, verbose=verbose)
+        else:
+            pred_nir = predict(model, [pred_tar, rgb], pred_tar, number_of_offsets=9, merge_method="mad", batch_size=batch_size_pred, verbose=verbose)
+
+        super_sampled = super_sample(
+            super_sampled,
+            fit_data=fit_data,
+            fit_epochs=fit_epochs,
+            iterations=iterations,
+            indices=indices,
+            method=method,
+            verbose=verbose,
+            normalise=True,
+            preloaded_model=preloaded_model,
+            batch_size_fit=batch_size_fit,
+            batch_size_pred=batch_size_pred,
+            _current_step=_current_step,
+            _pred_nir=pred_nir,
+        )
 
     return np.rint(super_sampled * 10000.0).astype("uint16")
