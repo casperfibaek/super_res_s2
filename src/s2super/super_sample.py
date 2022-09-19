@@ -86,7 +86,6 @@ def super_sample(
     for band in ["B02", "B03", "B04"]:
         if band not in indices:
             assert "Bands 2, 3, and 4 are required to supersample other bands." 
-    
 
     if preloaded_model is None:
         if verbose: print("Loading model...")
