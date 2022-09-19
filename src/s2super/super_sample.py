@@ -7,7 +7,7 @@ from buteo.raster.patches import get_patches
 from buteo.raster.resample import resample_array
 
 
-def get_model():
+def get_s2super_model():
     super_res_dir = os.path.dirname(os.path.realpath(__file__))
     model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v4"))
 
@@ -25,8 +25,8 @@ def super_sample(
     normalise=True,
     preloaded_model=None,
     batch_size_fit=32,
-    learning_rate_fit=0.00001,
     batch_size_pred=None,
+    learning_rate_fit=0.00001,
     _current_step=0,
     _pred_nir=None,
 ):
@@ -37,13 +37,17 @@ def super_sample(
     `data` (_str_/_np.ndarray_): The image to supersample </br>
 
     ## Kwargs:
-    `indices` (_dict_): If the input is not a safe file, a dictionary with the band names and the indices in the NumPy array must be proved. It comes in the form of { "B02": 0, "B03": 1, ... } (Default: **10m first, then 20m**) </br>
-    `method` (_str_): Either fast or accurate. If fast, uses less overlaps and weighted average merging. If accurate, uses more overlaps and the mad_merge algorithm (Default: **fast**) </br>
     `fit_data` (_bool_): Should the deep learning model be fitted with the data? Improves accuracy, but takes around 1m to fit on colab. (Default: **True**) </br>
     `fit_epochs` (_int_): If the model is refitted, for how many epochs should it run? (Default: **5**) </br>
+    `iterations` (_int_): How many times should the model be run? The more aggresive a number, the sharper edges, but higher risk of errors. (Default: **1**) </br>
+    `indices` (_dict_): If the input is not a safe file, a dictionary with the band names and the indices in the NumPy array must be proved. It comes in the form of { "B02": 0, "B03": 1, ... } (Default: **10m first, then 20m**) </br>
+    `method` (_str_): Either fast or accurate. If fast, uses less overlaps and weighted average merging. If accurate, uses more overlaps and the mad_merge algorithm (Default: **fast**) </br>
     `verbose` (_bool_): If True, print statements will update on the progress (Default: **True**) </br>
     `normalise` (_bool_): If the input data should be normalised. Leave this True, unless it has already been done. The model expects sentinel 2 l2a data normalised by dividing by 10000.0 (Default: **True**) </br>
     `preloaded_model` (_None/tf.model_): Allows preloading the model, useful if applying the super_sampling within a loop. (Default: **None**) </br>
+    `batch_size_fit` (_int_): The batch_size used to fit the model. (Default: **32**) </br>
+    `batch_size_pred` (_int_): The batch_size used to predict the model. (Default: **None**) </br>
+    `learning_rate_fit` (_float_): The learning rate to train the model with. (Default: **0.00001**) </br>
 
     ## Returns:
     (_np.ndarray_): A NumPy array with the supersampled data.
@@ -151,7 +155,7 @@ def super_sample(
 
     _current_step += 1
 
-    if iterations > _current_step:
+    if _current_step < iterations:
 
         pred_tar = super_sampled[:, :, indices["B08"]][:, :, np.newaxis]
         if method == "fast":
@@ -174,5 +178,7 @@ def super_sample(
             _current_step=_current_step,
             _pred_nir=pred_nir,
         )
+
+        return super_sampled * 10000.0
 
     return np.rint(super_sampled * 10000.0).astype("uint16")
