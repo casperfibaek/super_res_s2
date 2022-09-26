@@ -9,7 +9,7 @@ from buteo.raster.resample import resample_array
 
 def get_s2super_model():
     super_res_dir = os.path.dirname(os.path.realpath(__file__))
-    model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v4"))
+    model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v5"))
 
     return model
 
