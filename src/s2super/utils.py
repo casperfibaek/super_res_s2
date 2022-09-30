@@ -97,11 +97,15 @@ def predict(
         arr[sx:ex, sy:ey, idx] = pred_reshaped
         weights[sx:ex, sy:ey, idx] = pred_weights_reshaped
 
-    weights = weights[:, :, :, 0]
-    arr = arr[:, :, :, 0]
 
     weights_sum = np.sum(weights, axis=2)
     weights_norm = (weights[:, :, :, 0] / weights_sum)[:, :, :, np.newaxis]
+
+    # What is going on with dimensions here?
+    import pdb; pdb.set_trace()
+
+    weights = weights[:, :, :, 0]
+    arr = arr[:, :, :, 0]
 
     merged = None
     if merge_method == "mean":
