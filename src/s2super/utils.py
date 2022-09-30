@@ -81,7 +81,7 @@ def predict(
         predicted = model.predict(test, batch_size=batch_size, verbose=verbose)
 
         pred_values = predicted[:, :, :, 0][:, :, :, np.newaxis]
-        conf_values = predicted[:, :, :, 0][:, :, :, np.newaxis]
+        conf_values = predicted[:, :, :, 1][:, :, :, np.newaxis]
 
         pred_reshaped = beo.patches_to_array(pred_values, og_shape, tile_size)
         conf_reshaped = beo.patches_to_array(conf_values, og_shape, tile_size)
@@ -99,6 +99,8 @@ def predict(
 
     weights_sum = np.sum(weights, axis=2)
     weights_norm = (weights[:, :, :, 0] / weights_sum)[:, :, :, np.newaxis]
+
+    import pdb; pdb.set_trace
 
     merged = None
     if merge_method == "mean":
