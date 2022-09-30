@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 import buteo as beo
 
-from utils import predict, get_band_paths
+from s2super.utils import predict, get_band_paths
 
 
 def conf_loss(true, pred_and_conf):
