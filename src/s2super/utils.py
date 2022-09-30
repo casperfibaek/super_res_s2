@@ -80,8 +80,8 @@ def predict(
 
         predicted = model.predict(test, batch_size=batch_size, verbose=verbose)
 
-        pred_values = predicted[:, :, :, 0][:, :, :, np.newaxis]
-        conf_values = predicted[:, :, :, 1][:, :, :, np.newaxis]
+        pred_values = predicted[:, :, :, 0]
+        conf_values = predicted[:, :, :, 1]
 
         pred_reshaped = beo.patches_to_array(pred_values, og_shape, tile_size)
         conf_reshaped = beo.patches_to_array(conf_values, og_shape, tile_size)
@@ -104,7 +104,11 @@ def predict(
     if merge_method == "mean":
         merged = np.average(arr, axis=2, weights=weights_norm)
     elif merge_method == "max":
-        merged = arr[:, :, np.argmax(weights_norm, axis=2)]
+        mask = np.argmax(weights, axis=-1)[:, :, np.newaxis] == np.tile(
+            np.arange(0, weights.shape[2]), weights.shape[0] * weights.shape[1]
+        ).reshape(weights.shape[0], weights.shape[1], weights.shape[2])
+
+        merged = np.ma.masked_array(arr, mask=~mask).max(axis=2).filled(0)[:, :, np.newaxis]
     elif merge_method == "median":
         merged = beo.weighted_median(arr, weights_norm)
     elif merge_method == "mad":
