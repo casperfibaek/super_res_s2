@@ -110,7 +110,7 @@ def predict(
     elif merge_method == "mad":
         merged = beo.mad_merge(arr, weights_norm)
     elif merge_method == "debug":
-        arr, weights, weights_norm
+        return arr, weights, weights_norm
 
     if confidence_output:
         return merged, weights
