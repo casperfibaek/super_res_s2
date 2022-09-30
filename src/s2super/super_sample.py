@@ -1,15 +1,35 @@
 import os
 import numpy as np
 import tensorflow as tf
-from s2super.utils import predict, get_band_paths
-from buteo.raster.core_raster import raster_to_array
-from buteo.raster.patches import get_patches
-from buteo.raster.resample import resample_array
+import buteo as beo
+
+from utils import predict, get_band_paths
+
+
+def conf_loss(true, pred_and_conf):
+    pred, conf = tf.split(pred_and_conf, 2, axis=-1)
+
+    ALPHA = 0.2
+    BETA = 0.01
+    EPSILON = 1.19e-07
+
+    denom = tf.math.maximum(tf.math.subtract(1.0, conf), EPSILON)
+
+    base = tf.math.multiply(ALPHA, denom)
+
+    # BETA-Adjusted Mean Absolute Percentage Error (Conf-B-MAPE)
+    num_top = tf.math.add(tf.math.abs(tf.subtract(true, pred)), BETA)
+    num_bot = tf.math.add(tf.math.abs(true), BETA)
+    numerator = tf.math.divide(num_top, num_bot)
+
+    return tf.math.reduce_mean(
+        tf.math.add(base, tf.math.divide(numerator, denom))
+    )
 
 
 def get_s2super_model():
     super_res_dir = os.path.dirname(os.path.realpath(__file__))
-    model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v5"))
+    model = tf.keras.models.load_model(os.path.join(super_res_dir, "s2super_v6"), { "conf_loss": conf_loss })
 
     return model
 
@@ -24,9 +44,9 @@ def super_sample(
     verbose=True,
     normalise=True,
     preloaded_model=None,
-    batch_size_fit=32,
-    batch_size_pred=None,
-    learning_rate_fit=0.00001,
+    batch_size_fit=128,
+    batch_size_pred=256,
+    learning_rate_fit=1e-4,
     _current_step=0,
     _pred_nir=None,
 ):
@@ -59,26 +79,25 @@ def super_sample(
 
         b10m = []
         for key in paths["10m"]:
-            if verbose: print(f"Loading 10m band: {key}")
             if key in ["B02", "B03", "B04", "B08"]:
-                img_10m = raster_to_array(paths["10m"][key])
+
+                if verbose:
+                    print(f"Loading 10m band: {key}")
+
+                img_10m = beo.raster_to_array(paths["10m"][key])
                 b10m.append(img_10m)
 
         for key in paths["20m"]:
             if key in ["B05", "B06", "B07", "B8A", "B11", "B12"]:
 
                 if verbose:
-                    print(f"Loading 20m band: {key}")
-
-                img_20m = raster_to_array(paths["20m"][key])
-
-                if verbose:
                     print(f"Resampling 20m band: {key}")
 
-                img_20m = resample_array(img_20m, (b10m[0].shape[0], b10m[0].shape[1]), resample_alg="bilinear")
+                img_20m = beo.raster_to_array(paths["20m"][key])
+                img_20m = beo.resample_array(img_20m, (b10m[0].shape[0], b10m[0].shape[1]), resample_alg="bilinear")
 
                 b10m.append(img_20m)
-        
+
         data = np.concatenate(b10m, axis=2)
 
         b10m = None
@@ -87,15 +106,15 @@ def super_sample(
         if band not in indices:
             assert "Bands 2, 3, and 4 are required to supersample other bands." 
 
+    if normalise:
+        data = (data / 10000.0).astype("float32")
+
     if preloaded_model is None:
         if verbose: print("Loading model...")
         super_res_dir = os.path.dirname(os.path.realpath(__file__))
-        model = tf.keras.models.load_model(os.path.join(super_res_dir, "SuperResSentinel_v4"))
+        model = tf.keras.models.load_model(os.path.join(super_res_dir, "s2super_v6"))
     else:
-        model = preloaded_model
-
-    if normalise:
-        data = (data / 10000.0).astype("float32")
+        model = preloaded_model    
 
     if fit_data:
         if verbose: print("Re-fitting model...")
@@ -110,14 +129,14 @@ def super_sample(
             print("Resampling target data.")
 
         if _pred_nir is None:
-            nir_lr = resample_array(y_train, (y_train.shape[0] // 2, y_train.shape[1] // 2), resample_alg="average")
-            nir = resample_array(nir_lr, (y_train.shape[0], y_train.shape[1]), resample_alg="bilinear")
+            nir_lr = beo.resample_array(y_train, (y_train.shape[0] // 2, y_train.shape[1] // 2), resample_alg="average")
+            nir = beo.resample_array(nir_lr, (y_train.shape[0], y_train.shape[1]), resample_alg="bilinear")
         else:
             nir = _pred_nir
 
-        nir_patches, _, _ = get_patches(nir, tile_size=64, number_of_offsets=0, border_check=False)
-        rgb_patches, _, _ = get_patches(rgb, tile_size=64, number_of_offsets=0, border_check=False)
-        y_train, _, _ = get_patches(y_train, tile_size=64, number_of_offsets=0, border_check=False)
+        nir_patches, _, _ = beo.get_patches(nir, tile_size=64, number_of_offsets=0, border_check=False)
+        rgb_patches, _, _ = beo.get_patches(rgb, tile_size=64, number_of_offsets=0, border_check=False)
+        y_train, _, _ = beo.get_patches(y_train, tile_size=64, number_of_offsets=0, border_check=False)
         x_train = [nir_patches, rgb_patches]
 
         lr = learning_rate_fit
@@ -166,8 +185,8 @@ def super_sample(
                 print("Resampling: NIR")
 
             nir_RAW = super_sampled[:, :, indices["B08"]][:, :, np.newaxis]
-            nir_lr = resample_array(nir_RAW, (nir_RAW.shape[0] // 2, nir_RAW.shape[1] // 2), resample_alg="average")
-            nir = resample_array(nir_lr, (nir_RAW.shape[0], nir_RAW.shape[1]), resample_alg="bilinear")
+            nir_lr = beo.resample_array(nir_RAW, (nir_RAW.shape[0] // 2, nir_RAW.shape[1] // 2), resample_alg="average")
+            nir = beo.resample_array(nir_lr, (nir_RAW.shape[0], nir_RAW.shape[1]), resample_alg="bilinear")
         else:
             nir = _pred_nir
 

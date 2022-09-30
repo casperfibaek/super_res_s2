@@ -2,21 +2,46 @@ import os
 import numpy as np
 import tensorflow as tf
 from glob import glob
-from buteo.raster.patches import get_patches, get_kernel_weights, patches_to_array, weighted_median, mad_merge
+import buteo as beo
 
 
 def predict(
     model,
     data_input,
     data_output_proxy,
+    confidence_output=False,
+    confidence_merge=True,
     number_of_offsets=9,
     tile_size=64,
     borders=True,
-    batch_size=None,
-    edge_distance=5,
-    merge_method="mean",
+    batch_size=256,
+    edge_distance=3,
+    merge_method="max",
     verbose=0,
 ):
+    """ Create a prediction of sharpened sentinel 2 band.
+    
+    ## Args:
+    `model` (_str_/_tf.model_): The S2Super model to use. Either path or loaded.\n
+    `data_input` (_np.ndarray_): Input data for the model. Should be [bilinear_10m_unsharp, rgb_10m_sharp].\n
+    `data_output_proxy` (_np.ndarray_): A reference to the shape of the output. Usually you can just use unsharp band.\n
+
+    ## Kwargs:
+    `confidence_output` (_bool_): Should the model output the confidence band as well as the sharpened band? (Default: **True**)\n
+    `confidence_merge` (_bool_): Should the confidence be used to guide the merging of each prediction (Default: **True**)\n
+    `number_of_offsets` (_int_): How many overlaps should be used for the prediction. (Default: **9**)\n
+    `tile_size` (_int_): The square tilesize of the patches (Default: **64**)\n
+    `borders` (_bool_): Should borders patches be added? True ensures the same output size as the input can be made. (Default: **True**)\n
+    `batch_size` (_int_): Explicitely set the batch_size to use during inference. (Default: **256**)\n
+    `preloaded_model` (_None/tf.model_): Allows preloading the model, useful if applying the super_sampling within a loop. (Default: **None**)\n
+    `edge_distance` (_int_): Pixels closer to the edge will be weighted lower than central ones. What distance should be considered the maximum? (Default: **3**)\n
+    `merge_method` (_str_): How should the predictions be merged? All methods are weighted. (max, mean, median, mad) (Default: **max**)\n
+    `verbose` (_int_): Set the verbosity level of tensorflow. (Default: **1**)\n
+
+    ## Returns:
+    (_np.ndarray_): A NumPy array with the supersampled data.
+    
+    """
     if isinstance(model, str):
         model = tf.keras.models.load_model(model) if isinstance(model, str) else model
 
@@ -27,10 +52,10 @@ def predict(
 
     overlaps = []
     for data in data_input:
-        overlap, _, _ = get_patches(data, tile_size, number_of_offsets=number_of_offsets, border_check=borders)
+        overlap, _, _ = beo.get_patches(data, tile_size, number_of_offsets=number_of_offsets, border_check=borders)
         overlaps.append(overlap)
 
-    _, offsets, shapes = get_patches(data_output_proxy, tile_size, number_of_offsets=number_of_offsets, border_check=borders)
+    _, offsets, shapes = beo.get_patches(data_output_proxy, tile_size, number_of_offsets=number_of_offsets, border_check=borders)
 
     target_shape = list(data_output_proxy.shape)
     if len(target_shape) == 2:
@@ -41,7 +66,7 @@ def predict(
 
     arr = np.zeros(target_shape, dtype="float32")
     weights = np.zeros(target_shape, dtype="float32")
-    weight_tile = get_kernel_weights(tile_size, edge_distance)
+    weight_tile = beo.get_kernel_weights(tile_size, edge_distance)
 
     model = tf.keras.models.load_model(model) if isinstance(model, str) else model
 
@@ -54,10 +79,19 @@ def predict(
             test.append(overlap[idx])
 
         predicted = model.predict(test, batch_size=batch_size, verbose=verbose)
-        pred_reshaped = patches_to_array(predicted, og_shape, tile_size)
-       
-        pred_weights = np.tile(weight_tile, (predicted.shape[0], 1, 1))[:, :, :, np.newaxis]
-        pred_weights_reshaped = patches_to_array(pred_weights, og_shape, tile_size)
+
+        pred_values = predicted[:, :, :, 0][:, :, :, np.newaxis]
+        conf_values = predicted[:, :, :, 0][:, :, :, np.newaxis]
+
+        pred_reshaped = beo.patches_to_array(pred_values, og_shape, tile_size)
+        conf_reshaped = beo.patches_to_array(conf_values, og_shape, tile_size)
+
+        if confidence_merge:
+            pred_weights_reshaped = conf_reshaped
+        else:
+            pred_weights = np.tile(weight_tile, (pred_values.shape[0], 1, 1))[:, :, :, np.newaxis]
+            pred_weights_reshaped = beo.patches_to_array(pred_weights, og_shape, tile_size)
+            pred_weights_reshaped = pred_weights_reshaped
 
         sx, ex, sy, ey = offset
         arr[sx:ex, sy:ey, idx] = pred_reshaped
@@ -66,12 +100,18 @@ def predict(
     weights_sum = np.sum(weights, axis=2)
     weights_norm = (weights[:, :, :, 0] / weights_sum)[:, :, :, np.newaxis]
 
+    merged = None
     if merge_method == "mean":
-        return np.average(arr, axis=2, weights=weights_norm)
+        merged = np.average(arr, axis=2, weights=weights_norm)
+    elif merge_method == "max":
+        merged = arr[:, :, np.argmax(weights_norm, axis=2)]
     elif merge_method == "median":
-        return weighted_median(arr, weights_norm)
+        merged = beo.weighted_median(arr, weights_norm)
     elif merge_method == "mad":
-        return mad_merge(arr, weights_norm)
+        merged = beo.mad_merge(arr, weights_norm)
+
+    if confidence_output:
+        return merged, weights
 
     return arr, weights_norm
 
