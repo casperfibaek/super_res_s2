@@ -100,8 +100,6 @@ def predict(
     weights_sum = np.sum(weights, axis=2)
     weights_norm = (weights[:, :, :, 0] / weights_sum)[:, :, :, np.newaxis]
 
-    import pdb; pdb.set_trace
-
     merged = None
     if merge_method == "mean":
         merged = np.average(arr, axis=2, weights=weights_norm)
@@ -111,6 +109,8 @@ def predict(
         merged = beo.weighted_median(arr, weights_norm)
     elif merge_method == "mad":
         merged = beo.mad_merge(arr, weights_norm)
+    elif merge_method == "debug":
+        arr, weights, weights_norm
 
     if confidence_output:
         return merged, weights
