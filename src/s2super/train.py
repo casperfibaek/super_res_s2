@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from s2super.train_utils import SaveBestModel, OverfitProtection, ConvBlock, ReductionBlock, ExpansionBlock
+from s2super.train_utils import SaveBestModel, OverfitProtection, ConvBlock, ReductionBlock, ExpansionBlock, wrap_metric_ignoring_pred, wrap_metric_ignoring_conf
 from contextlib import redirect_stdout
 
 
@@ -43,30 +43,6 @@ def construct_conf_loss(alpha, beta):
     conf_loss.__name__ = "conf_loss"
 
     return conf_loss
-
-
-# Must be function, not object metric
-def wrap_metric_ignoring_conf(metric, name):
-    def metric_func(true, pred_and_conf):
-        pred, _conf = tf.split(pred_and_conf, 2, axis=-1)
-
-        return metric(true, pred)
-
-    metric_func.__name__ = name
-
-    return metric_func
-
-
-def wrap_metric_ignoring_pred(metric, name):
-    def metric_func(_true, pred_and_conf):
-        _pred, conf = tf.split(pred_and_conf, 2, axis=-1)
-
-        return metric(conf)
-
-    metric_func.__name__ = name
-
-    return metric_func
-
 
 def create_model(
     input_shape_low,

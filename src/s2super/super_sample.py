@@ -4,7 +4,7 @@ import tensorflow as tf
 import buteo as beo
 
 from s2super.utils import predict, get_band_paths
-from s2super.train import wrap_metric_ignoring_conf, wrap_metric_ignoring_pred
+from s2super.train_utils import wrap_metric_ignoring_conf, wrap_metric_ignoring_pred
 
 
 def conf_loss(true, pred_and_conf):
