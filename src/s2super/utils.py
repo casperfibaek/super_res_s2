@@ -80,8 +80,8 @@ def predict(
 
         predicted = model.predict(test, batch_size=batch_size, verbose=verbose)
 
-        pred_values = predicted[:, :, :, 0]
-        conf_values = predicted[:, :, :, 1]
+        pred_values = predicted[:, :, :, 0][:, :, :, np.newaxis]
+        conf_values = predicted[:, :, :, 1][:, :, :, np.newaxis]
 
         pred_reshaped = beo.patches_to_array(pred_values, og_shape, tile_size)
         conf_reshaped = beo.patches_to_array(conf_values, og_shape, tile_size)
@@ -97,29 +97,36 @@ def predict(
         arr[sx:ex, sy:ey, idx] = pred_reshaped
         weights[sx:ex, sy:ey, idx] = pred_weights_reshaped
 
+    weights = weights[:, :, :, 0]
+    arr = arr[:, :, :, 0]
+
     weights_sum = np.sum(weights, axis=2)
     weights_norm = (weights[:, :, :, 0] / weights_sum)[:, :, :, np.newaxis]
 
     merged = None
     if merge_method == "mean":
         merged = np.average(arr, axis=2, weights=weights_norm)
+
     elif merge_method == "max":
         mask = np.argmax(weights, axis=-1)[:, :, np.newaxis] == np.tile(
             np.arange(0, weights.shape[2]), weights.shape[0] * weights.shape[1]
         ).reshape(weights.shape[0], weights.shape[1], weights.shape[2])
 
         merged = np.ma.masked_array(arr, mask=~mask).max(axis=2).filled(0)[:, :, np.newaxis]
+
     elif merge_method == "median":
         merged = beo.weighted_median(arr, weights_norm)
+
     elif merge_method == "mad":
         merged = beo.mad_merge(arr, weights_norm)
+
     elif merge_method == "debug":
         return arr, weights, weights_norm
 
     if confidence_output:
         return merged, weights
-
-    return arr, weights_norm
+    
+    return merged
 
 
 def get_band_paths(safe_folder):
