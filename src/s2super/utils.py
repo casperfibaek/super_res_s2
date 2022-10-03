@@ -16,7 +16,7 @@ def predict(
     borders=True,
     batch_size=256,
     edge_distance=3,
-    merge_method="max",
+    merge_method="max_conf",
     verbose=0,
 ):
     """ Create a prediction of sharpened sentinel 2 band.
@@ -35,7 +35,7 @@ def predict(
     `batch_size` (_int_): Explicitely set the batch_size to use during inference. (Default: **256**)\n
     `preloaded_model` (_None/tf.model_): Allows preloading the model, useful if applying the super_sampling within a loop. (Default: **None**)\n
     `edge_distance` (_int_): Pixels closer to the edge will be weighted lower than central ones. What distance should be considered the maximum? (Default: **3**)\n
-    `merge_method` (_str_): How should the predictions be merged? All methods are weighted. (max, mean, median, mad) (Default: **max**)\n
+    `merge_method` (_str_): How should the predictions be merged? All methods are weighted. (max_conf, mean, median, mad) (Default: **max_conf**)\n
     `verbose` (_int_): Set the verbosity level of tensorflow. (Default: **1**)\n
 
     ## Returns:
@@ -97,37 +97,39 @@ def predict(
         arr[sx:ex, sy:ey, idx] = pred_reshaped
         weights[sx:ex, sy:ey, idx] = pred_weights_reshaped
 
-        import pdb; pdb.set_trace()
-
-    weights_sum = np.sum(weights, axis=2)
-    weights_norm = (weights[:, :, :, 0] / weights_sum)[:, :, :, np.newaxis]
-
-    # What is going on with dimensions here?
-    import pdb; pdb.set_trace()
-
-    weights = weights[:, :, :, 0]
     arr = arr[:, :, :, 0]
+    weights = weights[:, :, :, 0]
+
+    weights_norm = (weights / np.sum(weights, axis=2, keepdims=True))
 
     merged = None
     if merge_method == "mean":
-        merged = np.average(arr, axis=2, weights=weights_norm)
+        merged = np.average(arr, axis=2, weights=weights_norm, keepdims=True)
 
-    elif merge_method == "max":
-        import pdb; pdb.set_trace()
+        if confidence_output:
+            weights = np.average(weights, axis=2, weights=weights_norm, keepdims=True)
+
+    elif merge_method == "max_conf":
         mask = np.argmax(weights, axis=-1)[:, :, np.newaxis] == np.tile(
             np.arange(0, weights.shape[2]), weights.shape[0] * weights.shape[1]
         ).reshape(weights.shape[0], weights.shape[1], weights.shape[2])
 
         merged = np.ma.masked_array(arr, mask=~mask).max(axis=2).filled(0)[:, :, np.newaxis]
 
+        if confidence_output:
+            weights = np.ma.masked_array(weights, mask=~mask).max(axis=2).filled(0)[:, :, np.newaxis]
+
     elif merge_method == "median":
         merged = beo.weighted_median(arr, weights_norm)
+
+        if confidence_output:
+            weights = beo.weighted_median(weights, weights_norm)
 
     elif merge_method == "mad":
         merged = beo.mad_merge(arr, weights_norm)
 
-    elif merge_method == "debug":
-        return arr, weights, weights_norm
+        if confidence_output:
+            weights = beo.mad_merge(weights, weights_norm)
 
     if confidence_output:
         return merged, weights
