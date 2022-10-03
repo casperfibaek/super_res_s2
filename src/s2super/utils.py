@@ -9,7 +9,6 @@ def predict(
     model,
     data_input,
     data_output_proxy,
-    confidence_output=False,
     number_of_offsets=9,
     tile_size=64,
     borders=True,
@@ -17,6 +16,7 @@ def predict(
     edge_distance=3,
     merge_method="max_conf",
     merge_weights="tile",
+    output_confidence=False,
     output_variance=False,
     verbose=0,
 ):
@@ -28,8 +28,6 @@ def predict(
     `data_output_proxy` (_np.ndarray_): A reference to the shape of the output. Usually you can just use unsharp band.\n
 
     ## Kwargs:
-    `confidence_output` (_bool_): Should the model output the confidence band as well as the sharpened band? (Default: **True**)\n
-    `confidence_merge` (_str_): Should the confidence be used to guide the merging of each prediction. ('tile', 'conf', 'both', 'none') (Default: **tile**)\n
     `number_of_offsets` (_int_): How many overlaps should be used for the prediction. (Default: **9**)\n
     `tile_size` (_int_): The square tilesize of the patches (Default: **64**)\n
     `borders` (_bool_): Should borders patches be added? True ensures the same output size as the input can be made. (Default: **True**)\n
@@ -37,6 +35,9 @@ def predict(
     `preloaded_model` (_None/tf.model_): Allows preloading the model, useful if applying the super_sampling within a loop. (Default: **None**)\n
     `edge_distance` (_int_): Pixels closer to the edge will be weighted lower than central ones. What distance should be considered the maximum? (Default: **3**)\n
     `merge_method` (_str_): How should the predictions be merged? All methods are weighted. (max_conf, mean, median, mad) (Default: **max_conf**)\n
+    `merge_weights` (_str_): How should the weights of the merge be calculated. (tile, conf, both, none) (Default: **tile**)\n
+    `output_confidence` (_bool_): Should the model output the confidence band, as well as the sharpened band? (Default: **False**)\n
+    `output_variance` (_bool_): Should the model output the variance of the merged bands, as well as the sharpened band? (Default: **False**)\n
     `verbose` (_int_): Set the verbosity level of tensorflow. (Default: **1**)\n
 
     ## Returns:
@@ -97,7 +98,7 @@ def predict(
             pred_weights = np.tile(weight_tile, (pred_values.shape[0], 1, 1))[:, :, :, np.newaxis]
             pred_weights_reshaped = beo.patches_to_array(pred_weights, og_shape, tile_size) * conf_reshaped
         elif merge_weights == "none":
-            pred_weights_reshaped = np.ones_like(weights, dtype="float32")
+            pred_weights_reshaped = np.ones_like(conf_reshaped, dtype="float32")
         else:
             raise ValueError(f"Unknown merge_weights method. Valid are: 'tile', 'conf', 'both', 'none'. Recieved: {merge_weights}")
 
@@ -114,7 +115,7 @@ def predict(
     if merge_method == "mean":
         merged = np.average(arr, axis=2, weights=weights_norm)[:, :, np.newaxis]
 
-        if confidence_output:
+        if output_confidence:
             weights = np.average(weights, axis=2, weights=weights_norm)[:, :, np.newaxis]
 
     elif merge_method == "max_conf":
@@ -124,28 +125,28 @@ def predict(
 
         merged = np.ma.masked_array(arr, mask=~mask).max(axis=2).filled(0)[:, :, np.newaxis]
 
-        if confidence_output:
+        if output_confidence:
             weights = np.ma.masked_array(weights, mask=~mask).max(axis=2).filled(0)[:, :, np.newaxis]
 
     elif merge_method == "median":
         merged = beo.weighted_median(arr, weights_norm)
 
-        if confidence_output:
+        if output_confidence:
             weights = beo.weighted_median(weights, weights_norm)
 
     elif merge_method == "mad":
         merged = beo.mad_merge(arr, weights_norm)
 
-        if confidence_output:
+        if output_confidence:
             weights = beo.mad_merge(weights, weights_norm)
 
     if output_variance:
-        if confidence_output:
+        if output_confidence:
             merged, weights, np.var(arr, axis=2, keepdims=True)
         else:
             merged, np.var(arr, axis=2, keepdims=True)
 
-    if confidence_output:
+    if output_confidence:
         return merged, weights
     
     return merged
