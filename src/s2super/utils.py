@@ -142,10 +142,9 @@ def predict(
 
     if output_variance:
         if output_confidence:
-            import pdb; pdb.set_trace()
-            merged, weights, np.var(arr, axis=2, keepdims=True)
+            return merged, weights, np.var(arr, axis=2, keepdims=True)
         else:
-            merged, np.var(arr, axis=2, keepdims=True)
+            return merged, np.var(arr, axis=2, keepdims=True)
 
     if output_confidence:
         return merged, weights
