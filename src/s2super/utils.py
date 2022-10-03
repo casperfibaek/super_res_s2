@@ -14,8 +14,8 @@ def predict(
     borders=True,
     batch_size=256,
     edge_distance=3,
-    merge_method="max_conf",
-    merge_weights="tile",
+    merge_method="mean",
+    merge_weights="both",
     output_confidence=False,
     output_variance=False,
     verbose=0,
@@ -34,8 +34,8 @@ def predict(
     `batch_size` (_int_): Explicitely set the batch_size to use during inference. (Default: **256**)\n
     `preloaded_model` (_None/tf.model_): Allows preloading the model, useful if applying the super_sampling within a loop. (Default: **None**)\n
     `edge_distance` (_int_): Pixels closer to the edge will be weighted lower than central ones. What distance should be considered the maximum? (Default: **3**)\n
-    `merge_method` (_str_): How should the predictions be merged? All methods are weighted. (max_conf, mean, median, mad) (Default: **max_conf**)\n
-    `merge_weights` (_str_): How should the weights of the merge be calculated. (tile, conf, both, none) (Default: **tile**)\n
+    `merge_method` (_str_): How should the predictions be merged? All methods are weighted. (max_conf, mean, median, mad) (Default: **mean**)\n
+    `merge_weights` (_str_): How should the weights of the merge be calculated. (tile, conf, both, none) (Default: **both**)\n
     `output_confidence` (_bool_): Should the model output the confidence band, as well as the sharpened band? (Default: **False**)\n
     `output_variance` (_bool_): Should the model output the variance of the merged bands, as well as the sharpened band? (Default: **False**)\n
     `verbose` (_int_): Set the verbosity level of tensorflow. (Default: **1**)\n
@@ -190,12 +190,8 @@ def get_band_paths(safe_folder):
 
     assert os.path.isdir(safe_folder), f"Could not find folder: {safe_folder}"
 
-    bands["QI"]["CLDPRB_20m"] = glob(
-        f"{safe_folder}/GRANULE/*/QI_DATA/MSK_CLDPRB_20m.jp2"
-    )[0]
-    bands["QI"]["CLDPRB_60m"] = glob(
-        f"{safe_folder}/GRANULE/*/QI_DATA/MSK_CLDPRB_60m.jp2"
-    )[0]
+    bands["QI"]["CLDPRB_20m"] = glob(f"{safe_folder}/GRANULE/*/QI_DATA/MSK_CLDPRB_20m.jp2")[0]
+    bands["QI"]["CLDPRB_60m"] = glob(f"{safe_folder}/GRANULE/*/QI_DATA/MSK_CLDPRB_60m.jp2")[0]
 
     bands_10m = glob(f"{safe_folder}/GRANULE/*/IMG_DATA/R10m/*_???_*.jp2")
     for band in bands_10m:

@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "s2super"
-version = "1.2.22"
+version = "1.2.23"
 authors = [
   { name="Casper Fibaek", email="casperfibaek@gmail.com" },
 ]
@@ -19,7 +19,7 @@ classifiers = [
 ]
 dependencies = [
   "tensorflow>=2.8",
-  "buteo>=0.7.64",
+  "buteo>=0.7.65",
 ]
 
 [project.urls]

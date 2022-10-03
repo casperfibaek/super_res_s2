@@ -19,7 +19,7 @@ def conf_loss(true, pred_and_conf):
     base = tf.math.multiply(ALPHA, denom)
 
     # BETA-Adjusted Mean Absolute Percentage Error (Conf-B-MAPE)
-    num_top = tf.math.add(tf.math.abs(tf.subtract(true, pred)), BETA)
+    num_top = tf.math.abs(tf.subtract(true, pred))
     num_bot = tf.math.add(tf.math.abs(true), BETA)
     numerator = tf.math.divide(num_top, num_bot)
 
@@ -48,17 +48,14 @@ def super_sample(
     data,
     fit_data=True,
     fit_epochs=5,
-    iterations=1,
     indices={ "B02": 0, "B03": 1, "B04": 2, "B05": 4, "B06": 5, "B07": 6, "B08": 3, "B8A": 7, "B11": 8, "B12": 9 },
     method="fast",
-    verbose=True,
     normalise=True,
     preloaded_model=None,
     batch_size_fit=128,
     batch_size_pred=256,
     learning_rate_fit=1e-4,
-    _current_step=0,
-    _pred_nir=None,
+    verbose=True,
 ):
     """
     Super-sample a Sentinel 2 image. The source can either be a NumPy array of the bands, or a .safe file.
@@ -69,15 +66,14 @@ def super_sample(
     ## Kwargs:
     `fit_data` (_bool_): Should the deep learning model be fitted with the data? Improves accuracy, but takes around 1m to fit on colab. (Default: **True**) </br>
     `fit_epochs` (_int_): If the model is refitted, for how many epochs should it run? (Default: **5**) </br>
-    `iterations` (_int_): How many times should the model be run? The more aggresive a number, the sharper edges, but higher risk of errors. (Default: **1**) </br>
     `indices` (_dict_): If the input is not a safe file, a dictionary with the band names and the indices in the NumPy array must be proved. It comes in the form of { "B02": 0, "B03": 1, ... } (Default: **10m first, then 20m**) </br>
     `method` (_str_): Either fast or accurate. If fast, uses less overlaps and weighted average merging. If accurate, uses more overlaps and the mad_merge algorithm (Default: **fast**) </br>
-    `verbose` (_bool_): If True, print statements will update on the progress (Default: **True**) </br>
     `normalise` (_bool_): If the input data should be normalised. Leave this True, unless it has already been done. The model expects sentinel 2 l2a data normalised by dividing by 10000.0 (Default: **True**) </br>
     `preloaded_model` (_None/tf.model_): Allows preloading the model, useful if applying the super_sampling within a loop. (Default: **None**) </br>
     `batch_size_fit` (_int_): The batch_size used to fit the model. (Default: **32**) </br>
     `batch_size_pred` (_int_): The batch_size used to predict the model. (Default: **None**) </br>
     `learning_rate_fit` (_float_): The learning rate to train the model with. (Default: **0.00001**) </br>
+    `verbose` (_bool_): If True, print statements will update on the progress (Default: **True**) </br>
 
     ## Returns:
     (_np.ndarray_): A NumPy array with the supersampled data.
@@ -138,11 +134,8 @@ def super_sample(
         if verbose:
             print("Resampling target data.")
 
-        if _pred_nir is None:
-            nir_lr = beo.resample_array(y_train, (y_train.shape[0] // 2, y_train.shape[1] // 2), resample_alg="average")
-            nir = beo.resample_array(nir_lr, (y_train.shape[0], y_train.shape[1]), resample_alg="bilinear")
-        else:
-            nir = _pred_nir
+        nir_lr = beo.resample_array(y_train, (y_train.shape[0] // 2, y_train.shape[1] // 2), resample_alg="average")
+        nir = beo.resample_array(nir_lr, (y_train.shape[0], y_train.shape[1]), resample_alg="bilinear")
 
         nir_patches, _, _ = beo.get_patches(nir, tile_size=64, number_of_offsets=0, border_check=False)
         rgb_patches, _, _ = beo.get_patches(rgb, tile_size=64, number_of_offsets=0, border_check=False)
@@ -184,46 +177,5 @@ def super_sample(
                 pred = predict(model, [tar, rgb], tar, number_of_offsets=9, merge_method="mad", batch_size=batch_size_pred, verbose=verbose)
 
             super_sampled[:, :, indices[band]] = pred[:, :, 0]
-
-    _current_step += 1
-
-    if _current_step < iterations:
-
-        if _pred_nir is None:
-
-            if verbose:
-                print("Resampling: NIR")
-
-            nir_RAW = super_sampled[:, :, indices["B08"]][:, :, np.newaxis]
-            nir_lr = beo.resample_array(nir_RAW, (nir_RAW.shape[0] // 2, nir_RAW.shape[1] // 2), resample_alg="average")
-            nir = beo.resample_array(nir_lr, (nir_RAW.shape[0], nir_RAW.shape[1]), resample_alg="bilinear")
-        else:
-            nir = _pred_nir
-
-        if verbose:
-            print("Super-sampling band: NIR")
-
-        if method == "fast":
-            pred_nir = predict(model, [nir, rgb], nir, number_of_offsets=3, merge_method="mean", batch_size=batch_size_pred, verbose=verbose)
-        else:
-            pred_nir = predict(model, [nir, rgb], nir, number_of_offsets=9, merge_method="mad", batch_size=batch_size_pred, verbose=verbose)
-
-        super_sampled = super_sample(
-            super_sampled,
-            fit_data=fit_data,
-            fit_epochs=fit_epochs,
-            iterations=iterations,
-            indices=indices,
-            method=method,
-            verbose=verbose,
-            normalise=False,
-            preloaded_model=model,
-            batch_size_fit=batch_size_fit,
-            batch_size_pred=batch_size_pred,
-            _current_step=_current_step,
-            _pred_nir=pred_nir,
-        )
-
-        return super_sampled * 10000.0
 
     return np.rint(super_sampled * 10000.0).astype("uint16")
