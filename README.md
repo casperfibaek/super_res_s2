@@ -33,7 +33,7 @@ data = get_data_from_latlng(AOI, year=YEAR, months=MONTHS)[0]
 super_sampled = super_sample(data, method="fast", fit_data=False)
 ```
 
-Example colab notebook [![Open All Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/casperfibaek/super_res_s2/raw/main/example.ipynb)
+Example colab notebook [![Open All Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/casperfibaek/super_res_s2/blob/master/example.ipynb)
 
 ![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/raw/main/Macapa.png)
 ![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/raw/main/Okavango.png)
