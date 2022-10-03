@@ -10,13 +10,13 @@ def predict(
     data_input,
     data_output_proxy,
     confidence_output=False,
-    confidence_merge=True,
     number_of_offsets=9,
     tile_size=64,
     borders=True,
     batch_size=256,
     edge_distance=3,
     merge_method="max_conf",
+    merge_weights="tile",
     output_variance=False,
     verbose=0,
 ):
@@ -29,7 +29,7 @@ def predict(
 
     ## Kwargs:
     `confidence_output` (_bool_): Should the model output the confidence band as well as the sharpened band? (Default: **True**)\n
-    `confidence_merge` (_bool_): Should the confidence be used to guide the merging of each prediction (Default: **True**)\n
+    `confidence_merge` (_str_): Should the confidence be used to guide the merging of each prediction. ('tile', 'conf', 'both', 'none') (Default: **tile**)\n
     `number_of_offsets` (_int_): How many overlaps should be used for the prediction. (Default: **9**)\n
     `tile_size` (_int_): The square tilesize of the patches (Default: **64**)\n
     `borders` (_bool_): Should borders patches be added? True ensures the same output size as the input can be made. (Default: **True**)\n
@@ -87,12 +87,19 @@ def predict(
         pred_reshaped = beo.patches_to_array(pred_values, og_shape, tile_size)
         conf_reshaped = beo.patches_to_array(conf_values, og_shape, tile_size)
 
-        if confidence_merge:
-            pred_weights_reshaped = conf_reshaped
-        else:
+        if merge_weights == "tile":
             pred_weights = np.tile(weight_tile, (pred_values.shape[0], 1, 1))[:, :, :, np.newaxis]
             pred_weights_reshaped = beo.patches_to_array(pred_weights, og_shape, tile_size)
             pred_weights_reshaped = pred_weights_reshaped
+        elif merge_weights == "conf":
+            pred_weights_reshaped = conf_reshaped
+        elif merge_weights == "both":
+            pred_weights = np.tile(weight_tile, (pred_values.shape[0], 1, 1))[:, :, :, np.newaxis]
+            pred_weights_reshaped = beo.patches_to_array(pred_weights, og_shape, tile_size) * conf_reshaped
+        elif merge_weights == "none":
+            pred_weights_reshaped = np.ones_like(weights, dtype="float32")
+        else:
+            raise ValueError(f"Unknown merge_weights method. Valid are: 'tile', 'conf', 'both', 'none'. Recieved: {merge_weights}")
 
         sx, ex, sy, ey = offset
         arr[sx:ex, sy:ey, idx] = pred_reshaped
