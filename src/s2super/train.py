@@ -34,7 +34,7 @@ def construct_conf_loss(alpha, beta):
 
         base = alpha * denom
 
-        num_top = tf.math.add(tf.math.abs(tf.subtract(true, pred)), beta)
+        num_top = tf.math.add(tf.math.abs(tf.subtract(true, pred)))
         num_bot = tf.math.add(tf.math.abs(true), beta)
         numerator = tf.math.divide(num_top, num_bot) # beta mape
 
