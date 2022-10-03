@@ -17,6 +17,7 @@ def predict(
     batch_size=256,
     edge_distance=3,
     merge_method="max_conf",
+    output_variance=False,
     verbose=0,
 ):
     """ Create a prediction of sharpened sentinel 2 band.
@@ -130,6 +131,12 @@ def predict(
 
         if confidence_output:
             weights = beo.mad_merge(weights, weights_norm)
+
+    if output_variance:
+        if confidence_output:
+            merged, weights, np.var(arr, axis=2, keepdims=True)
+        else:
+            merged, np.var(arr, axis=2, keepdims=True)
 
     if confidence_output:
         return merged, weights
