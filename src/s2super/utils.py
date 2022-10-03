@@ -104,10 +104,10 @@ def predict(
 
     merged = None
     if merge_method == "mean":
-        merged = np.average(arr, axis=2, weights=weights_norm, keepdims=True)
+        merged = np.average(arr, axis=2, weights=weights_norm)[:, :, np.newaxis]
 
         if confidence_output:
-            weights = np.average(weights, axis=2, weights=weights_norm, keepdims=True)
+            weights = np.average(weights, axis=2, weights=weights_norm)[:, :, np.newaxis]
 
     elif merge_method == "max_conf":
         mask = np.argmax(weights, axis=-1)[:, :, np.newaxis] == np.tile(
