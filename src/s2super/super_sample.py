@@ -172,9 +172,9 @@ def super_sample(
             tar = super_sampled[:, :, indices[band]][:, :, np.newaxis]
 
             if method == "fast":
-                pred = predict(model, [tar, rgb], tar, number_of_offsets=3, merge_method="mean", batch_size=batch_size_pred, verbose=verbose)
+                pred = predict(model, [tar, rgb], tar, number_of_offsets=3, merge_method="mean", merge_weights="both", batch_size=batch_size_pred, verbose=verbose)
             else:
-                pred = predict(model, [tar, rgb], tar, number_of_offsets=9, merge_method="mad", batch_size=batch_size_pred, verbose=verbose)
+                pred = predict(model, [tar, rgb], tar, number_of_offsets=9, merge_method="mad", merge_weights="conf", batch_size=batch_size_pred, verbose=verbose)
 
             super_sampled[:, :, indices[band]] = pred[:, :, 0]
 

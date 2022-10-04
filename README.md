@@ -39,6 +39,8 @@ Example colab notebook [![Open All Collab](https://colab.research.google.com/ass
 ![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/raw/main/Okavango.png)
 ![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/raw/main/Copenhagen.png)
 
+![Super-sampled band 12. TOPLEFT: RGB, TOPRIGHT: CONFIDENCE, BOTLEFT: UNSHARP, BOTRIGHT:SHARP](https://github.com/casperfibaek/super_res_s2/raw/main/beirut_examples.png)
+
 # super_sample
 Super-sample a Sentinel 2 image. The source can either be a NumPy array of the bands, or a .safe file.
 
