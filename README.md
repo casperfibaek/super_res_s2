@@ -35,12 +35,13 @@ super_sampled = super_sample(data, method="fast", fit_data=False)
 
 Example colab notebook [![Open All Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/casperfibaek/super_res_s2/blob/master/example.ipynb)
 
-![Super-sampled band 12. TOPLEFT: RGB, TOPRIGHT: CONFIDENCE, BOTLEFT: UNSHARP, BOTRIGHT:SHARP](https://github.com/casperfibaek/super_res_s2/raw/main/b12_130dpi_zoomout.png)
-![Super-sampled band 12 Zoomed 1. TOPLEFT: RGB, TOPRIGHT: CONFIDENCE, BOTLEFT: UNSHARP, BOTRIGHT:SHARP](https://github.com/casperfibaek/super_res_s2/raw/main/b12_130dpi_zoomin_1.png)
-![Super-sampled band 12 Zoomed 2. TOPLEFT: RGB, TOPRIGHT: CONFIDENCE, BOTLEFT: UNSHARP, BOTRIGHT:SHARP](https://github.com/casperfibaek/super_res_s2/raw/main/b12_130dpi_zoomin_2.png)
-![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/raw/main/Macapa.png)
-![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/raw/main/Okavango.png)
-![Super-sampled bands: B05, B06, B07, B8A, B11, B12](https://github.com/casperfibaek/super_res_s2/raw/main/Copenhagen.png)
+|![Super-sampled band 12. TOPLEFT: RGB, TOPRIGHT: CONFIDENCE, BOTLEFT: UNSHARP, BOTRIGHT:SHARP](https://github.com/casperfibaek/super_res_s2/raw/main/b12_130dpi_zoomout.png)|
+|:--:|
+| *Sentinel 2 Band 12 (SWIR2) Sharpnened. </br> Clockwise from topleft: RGB, Confidence, B12-unsharp, B12-sharpened (Beirut - Lebanon, 2022)* |
+|![Super-sampled band 12 Zoomed 1. TOPLEFT: RGB, TOPRIGHT: CONFIDENCE, BOTLEFT: UNSHARP, BOTRIGHT:SHARP](https://github.com/casperfibaek/super_res_s2/raw/main/b8a_130dpi_zoomin_1.png)|
+| *Sentinel 2 Band 8A (Narrow-NIR) Sharpnened. Zoomed in. </br> Clockwise from topleft: RGB, Confidence, B8A-unsharp, B8A-sharpened (Aley - Lebanon, 2022)* |
+![Super-sampled band 12 Zoomed 2. TOPLEFT: RGB, TOPRIGHT: CONFIDENCE, BOTLEFT: UNSHARP, BOTRIGHT:SHARP](https://github.com/casperfibaek/super_res_s2/raw/main/b05_130dpi_zoomin_2.png)
+| *Sentinel 2 Band 5 (Red Edge 1) Sharpnened. Zoomed in. </br> Clockwise from topleft: RGB, Confidence, B5-unsharp, B5-sharpened (Rafic Hariri Airport - Lebanon, 2022)* |
 
 # super_sample
 Super-sample a Sentinel 2 image. The source can either be a NumPy array of the bands, or a .safe file.
