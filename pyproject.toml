@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "s2super"
-version = "1.2.24"
+version = "1.2.25"
 authors = [
   { name="Casper Fibaek", email="casperfibaek@gmail.com" },
 ]

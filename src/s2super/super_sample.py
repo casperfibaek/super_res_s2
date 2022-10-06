@@ -30,7 +30,7 @@ def conf_loss(true, pred_and_conf):
 def get_s2super_model():
     super_res_dir = os.path.dirname(os.path.realpath(__file__))
     model = tf.keras.models.load_model(
-        os.path.join(super_res_dir, "s2super_v6"),
+        os.path.join(super_res_dir, "s2super_v5"),
         custom_objects={
             "conf_loss": conf_loss,
             "MAE": wrap_metric_ignoring_conf(tf.keras.metrics.mean_absolute_error, "MAE"),
@@ -117,8 +117,7 @@ def super_sample(
 
     if preloaded_model is None:
         if verbose: print("Loading model...")
-        super_res_dir = os.path.dirname(os.path.realpath(__file__))
-        model = tf.keras.models.load_model(os.path.join(super_res_dir, "s2super_v6"))
+        model = get_s2super_model()
     else:
         model = preloaded_model    
 

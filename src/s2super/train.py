@@ -7,7 +7,7 @@ from contextlib import redirect_stdout
 MODEL_FOLDER = "path_to_model_folder"
 MODEL_NAME = "s2super"
 MODEL_VERSION = 5
-MODEL_BASE = "s2super_v4"
+MODEL_BASE = "s2super_v5"
 
 LOG_DIR = "path_to_log_files"
 TRAIN_DATASET = "path_to_training_dataset"
