@@ -178,3 +178,48 @@ def super_sample(
             super_sampled[:, :, indices[band]] = pred[:, :, 0]
 
     return np.rint(super_sampled * 10000.0).astype("uint16")
+
+
+def super_sample_patches(
+    data,
+    indices={ "B02": 0, "B03": 1, "B04": 2, "B05": 4, "B06": 5, "B07": 6, "B08": 3, "B8A": 7, "B11": 8, "B12": 9 },
+    normalise=True,
+    preloaded_model=None,
+    batch_size_pred=128,
+    verbose=True,
+):
+    for band in ["B02", "B03", "B04"]:
+        if band not in indices:
+            assert "Bands 2, 3, and 4 are required to supersample other bands." 
+
+    if normalise:
+        data = (data / 10000.0).astype("float32")
+
+    if preloaded_model is None:
+        if verbose: print("Loading model...")
+        model = get_s2super_model()
+    else:
+        model = preloaded_model    
+
+    super_sampled = np.copy(data)
+
+    if preloaded_model is None:
+        model = get_s2super_model()
+    else:
+        model = preloaded_model
+
+    for band in indices:
+        if band in ["B02", "B03", "B04", "B08"]:
+            super_sampled[:, :, indices[band]] = data[:, :, indices[band]]
+        else:
+            if verbose:
+                print("Super-sampling band:", band)
+
+            rgb = super_sampled[:, :, [indices["B02"], indices["B03"], indices["B04"]]]
+            tar = super_sampled[:, :, indices[band]][:, :, np.newaxis]
+
+            pred = model.predict([tar, rgb], batch_size=batch_size_pred, verbose=verbose)
+
+            super_sampled[:, :, indices[band]] = pred[:, :, 0]
+
+    return np.rint(super_sampled * 10000.0).astype("uint16")
