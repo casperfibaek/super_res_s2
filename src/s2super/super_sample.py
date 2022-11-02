@@ -203,11 +203,6 @@ def super_sample_patches(
 
     super_sampled = np.copy(data)
 
-    if preloaded_model is None:
-        model = get_s2super_model()
-    else:
-        model = preloaded_model
-
     for band in indices:
         if band in ["B02", "B03", "B04", "B08"]:
             super_sampled[:, :, indices[band]] = data[:, :, indices[band]]
