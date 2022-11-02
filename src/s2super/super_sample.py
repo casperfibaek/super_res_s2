@@ -205,16 +205,16 @@ def super_sample_patches(
 
     for band in indices:
         if band in ["B02", "B03", "B04", "B08"]:
-            super_sampled[:, :, indices[band]] = data[:, :, indices[band]]
+            super_sampled[:, :, :, indices[band]] = data[:, :, :, indices[band]]
         else:
             if verbose:
                 print("Super-sampling band:", band)
 
-            rgb = super_sampled[:, :, [indices["B02"], indices["B03"], indices["B04"]]]
-            tar = super_sampled[:, :, indices[band]][:, :, np.newaxis]
+            rgb = super_sampled[:, :, :, [indices["B02"], indices["B03"], indices["B04"]]]
+            tar = super_sampled[:, :, :, indices[band]][:, :, :, np.newaxis]
 
             pred = model.predict([tar, rgb], batch_size=batch_size_pred, verbose=verbose)
 
-            super_sampled[:, :, indices[band]] = pred[:, :, 0]
+            super_sampled[:, :, :, indices[band]] = pred[:, :, :, 0]
 
     return np.rint(super_sampled * 10000.0).astype("uint16")
